@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Epoch, Artifact } from '../types/game';
 import { ARTIFACTS } from '../data/epochs';
 import { hapticImpact, hapticNotification } from '../lib/telegram';
@@ -32,6 +32,11 @@ export function GachaModal({
   const [rollIndex, setRollIndex] = useState(0);
   const [artifact, setArtifact] = useState<Artifact | null>(null);
   const [isPart, setIsPart] = useState(true);
+
+  // Hold latest callback in a ref so the rolling interval never gets restarted
+  // when the parent re-renders (which happens every 100ms due to game tick).
+  const onArtifactDropRef = useRef(onArtifactDrop);
+  useEffect(() => { onArtifactDropRef.current = onArtifactDrop; });
 
   // Filter artifacts for current epoch and unlocked epochs
   const availableArtifacts = useMemo(() => {
@@ -103,7 +108,7 @@ export function GachaModal({
           setArtifact(result);
           setIsPart(!fullDrop);
           setCurrentIcon(result.icon);
-          onArtifactDrop(result, fullDrop);
+          onArtifactDropRef.current(result, fullDrop);
         }
 
         setPhase('result');
@@ -112,7 +117,9 @@ export function GachaModal({
     }, 70);
 
     return () => clearInterval(interval);
-  }, [phase, artifactsByRarity, availableArtifacts, onArtifactDrop]);
+  // onArtifactDrop intentionally excluded — held in ref to prevent interval restart
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, artifactsByRarity, availableArtifacts]);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
