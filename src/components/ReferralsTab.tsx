@@ -26,8 +26,7 @@ export function ReferralsTab({
 }: ReferralsTabProps) {
   const [copied, setCopied] = useState(false);
 
-  // Use env var first, fallback to empty string (link won't work without real bot username)
-  const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || '';
+  const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || 'test_museum_2026_bot';
 
   useEffect(() => {
     onLoadLeaderboard();
@@ -36,7 +35,7 @@ export function ReferralsTab({
   const handleCopyLink = async () => {
     if (!telegramId) return;
 
-    const link = `https://t.me/${botUsername || 'your_bot'}?start=ref_${telegramId}`;
+    const link = `https://t.me/${botUsername || 'test_museum_2026_bot'}?start=ref_${telegramId}`;
 
     try {
       await navigator.clipboard.writeText(link);
@@ -61,7 +60,7 @@ export function ReferralsTab({
     const tg = getTelegramWebApp();
     if (!telegramId) return;
 
-    const link = `https://t.me/${botUsername || 'your_bot'}?start=ref_${telegramId}`;
+    const link = `https://t.me/${botUsername || 'test_museum_2026_bot'}?start=ref_${telegramId}`;
     const text = `🎮 Ukraine Tap Game\n\nПодорожуй 12 епохами історії України!\n\n${link}`;
 
     if (tg?.openTelegramLink) {
