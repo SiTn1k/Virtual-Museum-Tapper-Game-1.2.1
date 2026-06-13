@@ -112,21 +112,18 @@ export async function saveGameState(state: GameState): Promise<void> {
 
   try {
     if (telegramId) {
-      // Has Telegram — upsert by telegram_id
-      // If there's a device_id record for this session, merge it
-      await supabase
+      const { error } = await supabase
         .from('game_progress')
         .upsert({ ...payload, telegram_id: telegramId }, { onConflict: 'telegram_id' });
+      if (error) throw error;
 
-      // Clean up old device_id record if it exists and has no telegram_id
+      // Clean up orphaned device_id record for this session
       await supabase
         .from('game_progress')
         .delete()
         .eq('device_id', deviceId)
         .is('telegram_id', null);
     } else {
-      // No Telegram — upsert by device_id
-      // Check if a record with this device_id already exists
       const { data: existing } = await supabase
         .from('game_progress')
         .select('id')
@@ -135,15 +132,17 @@ export async function saveGameState(state: GameState): Promise<void> {
         .maybeSingle();
 
       if (existing) {
-        await supabase
+        const { error } = await supabase
           .from('game_progress')
           .update(payload)
           .eq('device_id', deviceId)
           .is('telegram_id', null);
+        if (error) throw error;
       } else {
-        await supabase
+        const { error } = await supabase
           .from('game_progress')
           .insert({ ...payload, device_id: deviceId });
+        if (error) throw error;
       }
     }
   } catch (e) {
@@ -176,10 +175,65 @@ export async function loadGameState(): Promise<GameState | null> {
         return hydrateFromDb(data);
       }
 
-      // New Telegram user with referrer — award bonuses
-      if (telegramId && !data && referrerId && referrerId !== telegramId) {
-        await applyReferralBonus(telegramId, referrerId);
-        return buildNewUserState(referrerId);
+      // New Telegram user — create row immediately so they appear in the DB right away
+      if (telegramId) {
+        const userInfo = getTelegramUserInfo();
+        let bonus = 20;
+
+        if (referrerId && referrerId !== telegramId) {
+          await applyReferralBonus(telegramId, referrerId);
+          bonus = 20 + NEW_USER_BONUS;
+        }
+
+        const newRow = {
+          telegram_id: telegramId,
+          epoch_id: 'trypillia',
+          level: 1,
+          xp: 0,
+          xp_to_next_level: 100,
+          total_xp: 0,
+          currency: bonus,
+          total_currency_earned: bonus,
+          tap_power: 1,
+          passive_xp_per_second: 0,
+          owned_generators: [],
+          unlocked_epochs: ['trypillia'],
+          artifact_parts: {},
+          completed_artifacts: [],
+          referrer_id: referrerId && referrerId !== telegramId ? sanitizeId(referrerId) : null,
+          referrals_count: 0,
+          referral_earnings: 0,
+          active_boosters: {},
+          username: userInfo?.username ?? null,
+          first_name: userInfo?.first_name ?? null,
+          photo_url: userInfo?.photo_url ?? null,
+          last_saved_at: new Date().toISOString(),
+        };
+
+        const { error } = await supabase.from('game_progress').insert(newRow);
+        if (error) console.error('New user insert failed:', error);
+
+        const hasRef = Boolean(referrerId && referrerId !== telegramId);
+        return {
+          epochId: 'trypillia',
+          level: 1,
+          xp: 0,
+          xpToNextLevel: calculateXpToLevel(1),
+          totalXp: 0,
+          currency: bonus,
+          totalCurrencyEarned: bonus,
+          tapPower: 1,
+          passiveXpPerSecond: 0,
+          ownedGenerators: [],
+          unlockedEpochs: ['trypillia'],
+          artifactParts: {},
+          completedArtifacts: [],
+          lastSavedAt: Date.now(),
+          referrerId: hasRef ? sanitizeId(referrerId) : null,
+          referralsCount: 0,
+          referralEarnings: 0,
+          activeBoosters: {},
+        };
       }
     } catch (e) {
       console.error('Supabase load failed:', e);
@@ -250,7 +304,7 @@ function applyOfflineGains(parsed: GameState): GameState {
   };
 }
 
-async function applyReferralBonus(newUserId: number, referrerId: number): Promise<void> {
+async function applyReferralBonus(_newUserId: number, referrerId: number): Promise<void> {
   if (!supabase) return;
   try {
     const { data: ref } = await supabase
@@ -271,43 +325,11 @@ async function applyReferralBonus(newUserId: number, referrerId: number): Promis
         .eq('telegram_id', referrerId);
     }
 
-    const userInfo = getTelegramUserInfo();
-    await supabase.from('game_progress').insert({
-      telegram_id: newUserId,
-      referrer_id: referrerId,
-      currency: 20 + NEW_USER_BONUS,
-      total_currency_earned: 20 + NEW_USER_BONUS,
-      username: userInfo?.username,
-      first_name: userInfo?.first_name,
-      photo_url: userInfo?.photo_url,
-    });
   } catch (e) {
     console.error('Referral bonus failed:', e);
   }
 }
 
-function buildNewUserState(referrerId: number): GameState {
-  return {
-    epochId: 'trypillia',
-    level: 1,
-    xp: 0,
-    xpToNextLevel: calculateXpToLevel(1),
-    totalXp: 0,
-    currency: 20 + NEW_USER_BONUS,
-    totalCurrencyEarned: 20 + NEW_USER_BONUS,
-    tapPower: 1,
-    passiveXpPerSecond: 0,
-    ownedGenerators: [],
-    unlockedEpochs: ['trypillia'],
-    artifactParts: {},
-    completedArtifacts: [],
-    lastSavedAt: Date.now(),
-    referrerId,
-    referralsCount: 0,
-    referralEarnings: 0,
-    activeBoosters: {},
-  };
-}
 
 export async function fetchActiveBoosters(telegramId: number): Promise<ActiveBoosters> {
   if (!supabase) return {};
