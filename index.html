@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+    <!-- App Title -->
+    <title>Україна Крізь Час - Історична Тапалка</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Подорожуй 12 епохами історії України - від Трипільської культури до Незалежності. Збирай артефакти, відкривай генератори, запрошуй друзів!" />
+    <meta name="keywords" content="Україна, історія, гра, тапалка, Трипілля, Скіфія, Київська Русь, козаки, Telegram Mini App" />
+    <meta name="author" content="Ukraine Tap Game" />
+
+    <!-- Open Graph / Telegram Preview -->
+    <meta property="og:title" content="Україна Крізь Час" />
+    <meta property="og:description" content="Подорожуй 12 епохами історії України! Від Трипільської культури до сучасної України." />
+    <meta property="og:image" content="https://bolt.new/static/og_default.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="uk_UA" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Україна Крізь Час" />
+    <meta name="twitter:description" content="Подорожуй 12 епохами історії України!" />
+    <meta name="twitter:image" content="https://bolt.new/static/og_default.png" />
+
+    <!-- Telegram Mini App Required Meta Tags -->
+    <meta name="theme-color" content="#1a1a2e" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <!-- Telegram Ads Verification -->
+    <meta name="telegram:ads:allow" content="true" />
+
+    <!-- PWA Support -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- Prevent iOS zoom on input focus -->
+    <meta name="format-detection" content="telephone=no" />
+
+    <style>
+      /* Critical CSS - prevent FOUC */
+      html, body, #root {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background: #1a1a2e;
+        color: #ffffff;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        overflow: hidden;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      /* Loading spinner before React hydrates */
+      .initial-loader {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+      }
+      .initial-loader svg {
+        width: 48px;
+        height: 48px;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <!-- Initial loader shown before React loads -->
+      <div class="initial-loader">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2">
+          <circle cx="12" cy="12" r="10" opacity="0.25" />
+          <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round" />
+        </svg>
+        <p style="margin-top: 16px; opacity: 0.7;">Завантаження...</p>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "Україна Крізь Час",
+  "short_name": "Ukraine Tap",
+  "description": "Історична тапалка про 12 епох України",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#fbbf24",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["games", "entertainment"],
+  "lang": "uk"
+}
