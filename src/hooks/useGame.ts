@@ -314,13 +314,7 @@ export function useGame() {
 
   const deductGachaCost = useCallback((cost: number): boolean => {
     if (state.currency < cost) return false;
-
-    setState(prev => ({
-      ...prev,
-      currency: prev.currency - cost,
-      // totalCurrencyEarned is a lifetime stat — never decremented on spend
-    }));
-
+    setState(prev => ({ ...prev, currency: Math.max(0, prev.currency - cost) }));
     return true;
   }, [state.currency]);
 
